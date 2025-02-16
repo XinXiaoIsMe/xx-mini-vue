@@ -1,22 +1,24 @@
-type AnyFn = (...args: any[]) => any
+import type { EffectOptions } from '../types/reactive'
+import type { AnyFn } from '../types/types'
 
 let activeEffect: ReactiveEffect | undefined
 class ReactiveEffect {
   private _fn: AnyFn
-  constructor(_fn: AnyFn) {
+  constructor(_fn: AnyFn, public scheduler?: EffectOptions['scheduler']) {
     this._fn = _fn
   }
 
   run() {
     // eslint-disable-next-line ts/no-this-alias
     activeEffect = this
-    this._fn()
+    return this._fn()
   }
 }
 
-export function effect(fn: AnyFn) {
-  const _effect = new ReactiveEffect(fn)
+export function effect(fn: AnyFn, options?: EffectOptions) {
+  const _effect = new ReactiveEffect(fn, options?.scheduler)
   _effect.run()
+  return _effect.run.bind(_effect)
 }
 
 const targetMap = new Map()
@@ -46,6 +48,11 @@ export function trigger(target, key) {
     return
 
   for (const effect of dep) {
-    effect.run()
+    if (effect.scheduler) {
+      effect.scheduler()
+    }
+    else {
+      effect.run()
+    }
   }
 }
