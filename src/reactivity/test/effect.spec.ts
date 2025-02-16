@@ -1,5 +1,21 @@
-import { add } from '..'
+import { effect } from '../effect'
+import { reactive } from '../reactive'
 
-it('test', () => {
-  expect(add(1, 1)).toBe(2)
+describe('effect', () => {
+  it('happy path', () => {
+    const person = reactive({
+      age: 10,
+    })
+    let nextAge: number | undefined
+    effect(() => {
+      nextAge = person.age + 1
+    })
+
+    // init
+    expect(nextAge).toBe(11)
+
+    // update
+    person.age++
+    expect(nextAge).toBe(12)
+  })
 })
