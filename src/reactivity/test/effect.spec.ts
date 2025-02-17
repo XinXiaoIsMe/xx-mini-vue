@@ -1,5 +1,5 @@
 import type { AnyFn } from '../../types/types'
-import { effect } from '../effect'
+import { effect, stop } from '../effect'
 import { reactive } from '../reactive'
 
 describe('effect', () => {
@@ -57,5 +57,34 @@ describe('effect', () => {
     expect(run).toBe(runner)
     run?.()
     expect(dummy).toBe(2)
+  })
+
+  it('stop', () => {
+    let dummy: number | undefined
+    const obj = reactive({ prop: 1 })
+    const runner = effect(() => {
+      dummy = obj.prop
+    })
+    obj.prop = 2
+    expect(dummy).toBe(2)
+    stop(runner)
+    obj.prop = 3
+    expect(dummy).toBe(2)
+
+    runner()
+    expect(dummy).toBe(3)
+  })
+
+  it('onStop', () => {
+    let dummy;
+    const obj = reactive({
+      foo: 1
+    })
+    const onStop = jest.fn()
+    const runner = effect(() => {
+      dummy = obj.foo;
+    }, { onStop })
+    stop(runner)
+    expect(onStop).toHaveBeenCalledTimes(1)
   })
 })
